@@ -23,7 +23,12 @@ class Dataframe:
         end_index = start_index + cfg.NUMBER_OF_SAMPLES
 
         df_sample = self._dataframe[start_index: end_index]
-        return np.expand_dims(df_sample[['hours', 'minutes', 'microsec', 'bid', 'ask']].values, axis=0)
+
+        actual_ask = df_sample.at[df_sample.index[-1], 'ask']
+        actual_bid = df_sample.at[df_sample.index[-1], 'bid']
+
+        return np.expand_dims(df_sample[['hours', 'minutes', 'microsec', 'bid', 'ask']].values, axis=0), \
+               actual_ask, actual_bid
 
     @staticmethod
     def _load():
@@ -55,7 +60,7 @@ if __name__ == '__main__':
 
     for i in range(0, dff.lenght):
         start = time.time()
-        val = dff.get(i)
+        val, ask, bid = dff.get(i)
         end = time.time()
 
         print(end - start)
