@@ -6,7 +6,7 @@ import time
 
 class Trevor:
     def __init__(self, df: dataframe.Dataframe):
-        self.__df = df
+        self.df = df
 
         self.cursor = 0
         self.enter_price = 0
@@ -20,26 +20,30 @@ class Trevor:
         self.last_action = 0
 
     def step(self, action):
-        sample, actual_ask, actual_bid = self.__df.get(self.cursor)
+        sample, actual_ask, actual_bid = self.df.get(self.cursor)
         sample = self.__append_last_action(sample=sample, action=action)
 
-        reward = self.__process_action(action=action, actual_ask=actual_ask, actual_bid=actual_bid)
+        reward, closing_trade = self.__process_action(action=action, actual_ask=actual_ask, actual_bid=actual_bid)
         self.__increment_cursor()
 
-        return sample, reward
+        return sample, reward, closing_trade, ''
 
     def __process_action(self, action, actual_ask, actual_bid):
         if action < 0 or action > 2:
             raise ValueError(f'Action have to be inrage (0 - 2) got {action}')
 
+        closing_trade = False
+
         # """ CLOSING POSITION """
         if (self.last_action == 2 and action == 0) or (self.last_action == 1 and action == 0):
             reward = self.__close_trade(actual_bid=actual_bid, actual_ask=actual_ask)
+            closing_trade = True
 
         # """ CLOSING POSITION AND GOING TO DIFFERENT POSITION """
         elif (self.last_action == 2 and action == 1) or (self.last_action == 1 and action == 2):
             reward = self.__close_trade(actual_bid=actual_bid, actual_ask=actual_ask)
             self.enter_price = actual_ask if action == 2 else actual_bid
+            closing_trade = True
 
         # """ HOLDING OPENED POSITION  """
         elif (self.last_action == 2 and action == 2) or (self.last_action == 1 and action == 1):
@@ -67,13 +71,13 @@ class Trevor:
 
         self.last_action = action
         self.total_reward += reward
-        return reward
+        return reward, closing_trade
 
     def __increment_cursor(self):
         """ Incrementing the cursor, if the cursor is bigger than lenght of the dataframe, then reset it"""
 
         self.cursor += 1
-        if self.cursor > self.__df.lenght:
+        if self.cursor > self.df.lenght:
             self.reset()
 
     def __close_trade(self, actual_ask, actual_bid):
