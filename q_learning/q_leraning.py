@@ -74,7 +74,7 @@ class DQNAgent:
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
-            target = self.model.predict(state)
+            target = self.model.predict(state, steps=1)
             if done:
                 target[0][action] = reward
             else:
@@ -95,14 +95,14 @@ class DQNAgent:
 
 if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
-    state_size = (cfg.NUMBER_OF_SAMPLES + 1, 6)
+    state_size = (cfg.NUMBER_OF_SAMPLES, 6)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
 
     # agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
-    batch_size = 32
+    batch_size = 128
 
     for e in range(EPISODES):
         state = env.reset()
@@ -114,7 +114,10 @@ if __name__ == "__main__":
             agent.memorize(state, action, reward, next_state, closed)
             state = next_state
 
-            print(f'Actual reward = {reward},\t total reward = {env.total_reward},\t action = {action}')
+            print(f'Actual reward = {round(reward, 3)},\t '
+                  f'total reward = {round(env.total_reward, 3)},\t '
+                  f'action = {action}')
+
             if closed and reward > 0:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {:.2}"
