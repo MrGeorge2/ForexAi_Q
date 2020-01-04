@@ -89,10 +89,12 @@ class Trevor:
         return reward
 
     def __append_last_action(self, sample: np.ndarray, action: int):
-        how_many = sample.shape[2]
-        action_arr = (np.expand_dims(np.asarray([action for i in range(0, how_many)]), axis=0))
+        how_many = sample.shape[1]
+        action = cfg.ACTION_DECODE[action]
 
-        return np.expand_dims(np.append(sample[0], action_arr, axis=0), axis=0)
+        action_arr = (np.expand_dims(np.asarray([action for i in range(0, how_many)]), axis=1))
+
+        return np.expand_dims(np.append(sample[0], action_arr, axis=1), axis=0)
 
 
 if __name__ == '__main__':

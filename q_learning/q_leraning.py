@@ -6,7 +6,7 @@ import cfg
 import numpy as np
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, LSTM, Dropout
 from keras.optimizers import Adam
 from keras import backend as K
 
@@ -47,8 +47,12 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(24, activation='relu'))
+        model.add(LSTM(units=2000, return_sequences=True, input_shape=self.state_size))
+        model.add(Dropout(0.2))
+
+        model.add(LSTM(units=128, return_sequences=False))
+        model.add(Dropout(0.2))
+
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss=self._huber_loss,
                       optimizer=Adam(lr=self.learning_rate))
@@ -91,7 +95,7 @@ class DQNAgent:
 
 if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
-    state_size = cfg.NUMBER_OF_SAMPLES + 1
+    state_size = (cfg.NUMBER_OF_SAMPLES + 1, 6)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
 
@@ -102,20 +106,21 @@ if __name__ == "__main__":
 
     for e in range(EPISODES):
         state = env.reset()
-        state = np.reshape(state, [1, state_size])
 
         for time in range(env.df.lenght):
             action = agent.act(state)
             next_state, reward, closed, _ = env.step(action)
 
-            next_state = np.reshape(next_state, [1, state_size])
             agent.memorize(state, action, reward, next_state, closed)
             state = next_state
 
+            print(f'Actual reward = {reward},\t total reward = {env.total_reward},\t action = {action}')
             if closed and reward > 0:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {:.2}"
                       .format(e, EPISODES, time, agent.epsilon))
+
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
+
         agent.save("./save/cartpole-ddqn.h5")
