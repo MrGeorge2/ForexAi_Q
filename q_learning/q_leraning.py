@@ -102,7 +102,7 @@ class Trevor:
 
     def __process_action(self, action, actual_ask, actual_bid):
         if action < 0 or action > 2:
-            raise ValueError(f'Action have to be inrage (0 - 2) got {action}')
+            raise ValueError('Action have to be inrage (0 - 2) got {action}')
 
         closing_trade = False
 
@@ -139,7 +139,7 @@ class Trevor:
             reward = HOLD_REWARD
 
         else:
-            raise ValueError(f'Last action = {self.last_action} and actual_action = {action}')
+            raise ValueError('Last action = {self.last_action} and actual_action = {action}')
 
         self.last_action = action
         self.total_reward += reward
