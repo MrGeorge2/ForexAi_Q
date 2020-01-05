@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 from keras.optimizers import Adam
 from keras import backend as K
+import time as t_lib
 
 import tensorflow as tf
 
@@ -74,7 +75,6 @@ class DQNAgent:
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
-
             if not isinstance(state, np.ndarray):
                 continue
 
@@ -87,6 +87,7 @@ class DQNAgent:
                 target[0][action] = reward + self.gamma * np.amax(t)
                 # target[0][action] = reward + self.gamma * t[np.argmax(a)]
             self.model.fit(state, target, epochs=1, verbose=0)
+
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     # agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
-    batch_size = 128
+    batch_size = 32
 
     for e in range(EPISODES):
         state = env.reset()
