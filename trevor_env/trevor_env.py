@@ -20,15 +20,15 @@ class Trevor:
         self.last_action = 0
 
     def step(self, action):
-        sample, actual_ask, actual_bid = self.df.get(self.cursor)
+        sample, last_open, last_close = self.df.get(self.cursor)
         sample = self.__append_last_action(sample=sample, action=action)
 
-        reward, closing_trade = self.__process_action(action=action, actual_ask=actual_ask, actual_bid=actual_bid)
+        reward, closing_trade = self.__process_action(action=action, last_open=last_open, last_close=last_close)
         self.__increment_cursor()
 
         return sample, reward, closing_trade, ''
 
-    def __process_action(self, action, actual_ask, actual_bid):
+    def __process_action(self, action, last_open, last_close):
         if action < 0 or action > 2:
             raise ValueError('Action have to be inrage (0 - 2) got {action}')
 
@@ -36,30 +36,30 @@ class Trevor:
 
         # """ CLOSING POSITION """
         if (self.last_action == 2 and action == 0) or (self.last_action == 1 and action == 0):
-            reward = self.__close_trade(actual_bid=actual_bid, actual_ask=actual_ask)
+            reward = self.__close_trade(last_close=last_close)
             closing_trade = True
 
         # """ CLOSING POSITION AND GOING TO DIFFERENT POSITION """
         elif (self.last_action == 2 and action == 1) or (self.last_action == 1 and action == 2):
-            reward = self.__close_trade(actual_bid=actual_bid, actual_ask=actual_ask)
-            self.enter_price = actual_ask if action == 2 else actual_bid
+            reward = self.__close_trade(last_close=last_close)
+            self.enter_price = last_open
             closing_trade = True
 
         # """ HOLDING OPENED POSITION  """
         elif (self.last_action == 2 and action == 2) or (self.last_action == 1 and action == 1):
             if self.last_action == 2:
-                reward = (actual_ask - self.enter_price) * cfg.REWARD_FOR_PIPS
+                reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS
 
             else:
-                reward = (self.enter_price - actual_bid) * cfg.REWARD_FOR_PIPS
+                reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS
 
         # """ OPENING POSITION  """
         elif (self.last_action == 0 and action == 1) or (self.last_action == 0 and action == 2):
             if action == 1:
-                self.enter_price = actual_bid
+                self.enter_price = last_open
 
             else:
-                self.enter_price = actual_ask
+                self.enter_price = last_open
             reward = cfg.HOLD_REWARD
 
         # """ HOLD """
@@ -80,12 +80,12 @@ class Trevor:
         if self.cursor > self.df.lenght:
             self.reset()
 
-    def __close_trade(self, actual_ask, actual_bid):
+    def __close_trade(self, last_close):
         if self.last_action == 2:
-            reward = (actual_ask - self.enter_price) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
+            reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
 
         else:
-            reward = (self.enter_price - actual_bid) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
+            reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
         return reward
 
     def __append_last_action(self, sample: np.ndarray, action: int):
