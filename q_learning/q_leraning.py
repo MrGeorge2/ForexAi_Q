@@ -14,7 +14,7 @@ import os
 
 EPISODES = 5000
 DATAFRAME_NAME = 'EURUSD-2019-11.csv'
-NUMBER_OF_SAMPLES = 10000
+NUMBER_OF_SAMPLES = 1000
 
 HOLD_REWARD = -0.1
 REWARD_FOR_PIPS = 10000
@@ -204,7 +204,7 @@ class DQNAgent:
         model.add(LSTM(units=32, return_sequences=True, input_shape=self.state_size))
         model.add(Dropout(0.2))
 
-        model.add(LSTM(units=32, return_sequences=False))
+        model.add(Dense(units=32, activation='relu'))
         model.add(Dropout(0.2))
 
         model.add(Dense(self.action_size, activation='linear'))
