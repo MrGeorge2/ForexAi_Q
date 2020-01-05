@@ -1,19 +1,172 @@
 # -*- coding: utf-8 -*-
 import random
-from dataframe import dataframe
-from trevor_env import trevor_env
-import cfg
 import numpy as np
+import pandas as pd
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 from keras.optimizers import Adam
 from keras import backend as K
 import time as t_lib
-
 import tensorflow as tf
+import os
+
 
 EPISODES = 5000
+DATAFRAME_NAME = 'EURUSD-2019-11.csv'
+NUMBER_OF_SAMPLES = 50000
+
+HOLD_REWARD = -0.1
+REWARD_FOR_PIPS = 10000
+TIMES_FACTOR = 10
+
+ACTION_DECODE = {
+    0: 0,
+    1: 0.5,
+    2: 1,
+}
+
+
+class Dataframe:
+
+    def __init__(self):
+        self._dataframe = self._load()
+
+    @property
+    def lenght(self):
+        return len(self._dataframe.index) - NUMBER_OF_SAMPLES
+
+    def get(self, sample_number):
+        if sample_number > self.lenght or sample_number < 0:
+            raise ValueError(f"Sample number out of range (0 - {self.lenght})")
+
+        start_index = sample_number
+        end_index = start_index + NUMBER_OF_SAMPLES
+
+        df_sample = self._dataframe[start_index: end_index]
+
+        actual_ask = df_sample.at[df_sample.index[-1], 'ask']
+        actual_bid = df_sample.at[df_sample.index[-1], 'bid']
+
+        return np.expand_dims(df_sample[['hours', 'minutes', 'microsec', 'bid', 'ask']].values, axis=0), \
+               actual_ask, actual_bid
+
+    @staticmethod
+    def _load():
+        """ Creating relative path and then loading the df_path """
+        df_path = os.path.join(os.path.dirname(os.path.abspath(__file__)) +
+                               os.path.normpath('/{}'.format(DATAFRAME_NAME)))
+        df = pd.read_csv(
+            df_path,
+            names=[
+                'currency_pair',
+                'datetime',
+                'bid',
+                'ask'
+            ],
+            dtype={
+                'datetime'
+                'bid': np.float32,
+                'ask': np.float32,
+            }
+        )
+        df['hours'] = pd.to_datetime(df['datetime'], format='%Y%m%d %H:%M:%S.%f').dt.hour / 24
+        df['minutes'] = pd.to_datetime(df['datetime'], format='%Y%m%d %H:%M:%S.%f').dt.minute / 64
+        df['microsec'] = pd.to_datetime(df['datetime'], format='%Y%m%d %H:%M:%S.%f').dt.microsecond / 1000000
+        return df
+
+
+class Trevor:
+    def __init__(self, df):
+        self.df = df
+
+        self.cursor = 0
+        self.enter_price = 0
+        self.last_action = 0
+
+        self.total_reward = 0
+
+    def reset(self):
+        self.cursor = 0
+        self.enter_price = 0
+        self.last_action = 0
+
+    def step(self, action):
+        sample, actual_ask, actual_bid = self.df.get(self.cursor)
+        sample = self.__append_last_action(sample=sample, action=action)
+
+        reward, closing_trade = self.__process_action(action=action, actual_ask=actual_ask, actual_bid=actual_bid)
+        self.__increment_cursor()
+
+        return sample, reward, closing_trade, ''
+
+    def __process_action(self, action, actual_ask, actual_bid):
+        if action < 0 or action > 2:
+            raise ValueError(f'Action have to be inrage (0 - 2) got {action}')
+
+        closing_trade = False
+
+        # """ CLOSING POSITION """
+        if (self.last_action == 2 and action == 0) or (self.last_action == 1 and action == 0):
+            reward = self.__close_trade(actual_bid=actual_bid, actual_ask=actual_ask)
+            closing_trade = True
+
+        # """ CLOSING POSITION AND GOING TO DIFFERENT POSITION """
+        elif (self.last_action == 2 and action == 1) or (self.last_action == 1 and action == 2):
+            reward = self.__close_trade(actual_bid=actual_bid, actual_ask=actual_ask)
+            self.enter_price = actual_ask if action == 2 else actual_bid
+            closing_trade = True
+
+        # """ HOLDING OPENED POSITION  """
+        elif (self.last_action == 2 and action == 2) or (self.last_action == 1 and action == 1):
+            if self.last_action == 2:
+                reward = (actual_ask - self.enter_price) * REWARD_FOR_PIPS
+
+            else:
+                reward = (self.enter_price - actual_bid) * REWARD_FOR_PIPS
+
+        # """ OPENING POSITION  """
+        elif (self.last_action == 0 and action == 1) or (self.last_action == 0 and action == 2):
+            if action == 1:
+                self.enter_price = actual_bid
+
+            else:
+                self.enter_price = actual_ask
+            reward = HOLD_REWARD
+
+        # """ HOLD """
+        elif self.last_action == 0 and action == 0:
+            reward = HOLD_REWARD
+
+        else:
+            raise ValueError(f'Last action = {self.last_action} and actual_action = {action}')
+
+        self.last_action = action
+        self.total_reward += reward
+        return reward, closing_trade
+
+    def __increment_cursor(self):
+        """ Incrementing the cursor, if the cursor is bigger than lenght of the dataframe, then reset it"""
+
+        self.cursor += 1
+        if self.cursor > self.df.lenght:
+            self.reset()
+
+    def __close_trade(self, actual_ask, actual_bid):
+        if self.last_action == 2:
+            reward = (actual_ask - self.enter_price) * REWARD_FOR_PIPS * TIMES_FACTOR
+
+        else:
+            reward = (self.enter_price - actual_bid) * REWARD_FOR_PIPS * TIMES_FACTOR
+        return reward
+
+    def __append_last_action(self, sample: np.ndarray, action: int):
+        how_many = sample.shape[1]
+        action = ACTION_DECODE[action]
+
+        action_arr = (np.expand_dims(np.asarray([action for i in range(0, how_many)]), axis=1))
+
+        return np.expand_dims(np.append(sample[0], action_arr, axis=1), axis=0)
 
 
 class DQNAgent:
@@ -99,8 +252,8 @@ class DQNAgent:
 
 
 if __name__ == "__main__":
-    env = trevor_env.Trevor(dataframe.Dataframe())
-    state_size = (cfg.NUMBER_OF_SAMPLES, 6)
+    env = Trevor(Dataframe())
+    state_size = (NUMBER_OF_SAMPLES, 6)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
 
