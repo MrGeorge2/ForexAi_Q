@@ -14,7 +14,7 @@ import os
 
 EPISODES = 5000
 DATAFRAME_NAME = 'EURUSD-2019-11.csv'
-NUMBER_OF_SAMPLES = 1000
+NUMBER_OF_SAMPLES = 10000
 
 HOLD_REWARD = -0.1
 REWARD_FOR_PIPS = 10000
@@ -48,8 +48,7 @@ class Dataframe:
         actual_ask = df_sample.at[df_sample.index[-1], 'ask']
         actual_bid = df_sample.at[df_sample.index[-1], 'bid']
 
-        return np.expand_dims(df_sample[['hours', 'minutes', 'microsec', 'bid', 'ask']].values, axis=0), \
-               actual_ask, actual_bid
+        return np.expand_dims(df_sample[['bid', 'ask']].values, axis=0), actual_ask, actual_bid
 
     @staticmethod
     def _load():
@@ -253,7 +252,7 @@ class DQNAgent:
 
 if __name__ == "__main__":
     env = Trevor(Dataframe())
-    state_size = (NUMBER_OF_SAMPLES, 6)
+    state_size = (NUMBER_OF_SAMPLES, 3)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
 
@@ -267,6 +266,11 @@ if __name__ == "__main__":
 
         for time in range(env.df.lenght):
             action = agent.act(state)
+
+            if action > 3 or action < 0:
+                print('Got action ' + action)
+                continue
+
             next_state, reward, closed, _ = env.step(action)
 
             if not isinstance(next_state, np.ndarray) or not(state, np.ndarray):
