@@ -47,10 +47,10 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(LSTM(units=2000, return_sequences=True, input_shape=self.state_size))
+        model.add(LSTM(units=32, return_sequences=True, input_shape=self.state_size))
         model.add(Dropout(0.2))
 
-        model.add(LSTM(units=128, return_sequences=False))
+        model.add(LSTM(units=32, return_sequences=False))
         model.add(Dropout(0.2))
 
         model.add(Dense(self.action_size, activation='linear'))
@@ -74,7 +74,11 @@ class DQNAgent:
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
-            target = self.model.predict(state, steps=1)
+
+            if not isinstance(state, np.ndarray):
+                continue
+
+            target = self.model.predict(state, steps=1, verbose=0)
             if done:
                 target[0][action] = reward
             else:
@@ -111,7 +115,12 @@ if __name__ == "__main__":
             action = agent.act(state)
             next_state, reward, closed, _ = env.step(action)
 
-            agent.memorize(state, action, reward, next_state, closed)
+            if not isinstance(next_state, np.ndarray) or not(state, np.ndarray):
+                print(next_state)
+                print('NOT NUMPY!!')
+                continue
+
+            agent.memorize(state=state, action=action, reward=reward, next_state=next_state, done=closed)
             state = next_state
 
             print(f'Actual reward = {round(reward, 3)},\t '
