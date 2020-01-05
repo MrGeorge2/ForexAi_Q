@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Dropout
+from keras.layers import Dense, LSTM, Dropout, CuDNNLSTM
 from keras.optimizers import Adam
 from keras import backend as K
 import time as t_lib
@@ -200,10 +200,10 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(LSTM(units=32, return_sequences=True, input_shape=self.state_size))
+        model.add(CuDNNLSTM(units=32, return_sequences=True, input_shape=self.state_size))
         model.add(Dropout(0.2))
 
-        model.add(Dense(units=32, activation='relu'))
+        model.add(CuDNNLSTM(units=16, return_sequences=False))
         model.add(Dropout(0.2))
 
         model.add(Dense(self.action_size, activation='linear'))
