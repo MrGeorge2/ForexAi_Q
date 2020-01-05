@@ -124,9 +124,7 @@ if __name__ == "__main__":
             agent.memorize(state=state, action=action, reward=reward, next_state=next_state, done=closed)
             state = next_state
 
-            print(f'Actual reward = {round(reward, 3)},\t '
-                  f'total reward = {round(env.total_reward, 3)},\t '
-                  f'action = {action}')
+            print('Actual reward = {},\t total reward = {},\t action = {}'.format(round(reward, 3), round(env.total_reward, 3), action))
 
             if closed and reward > 0:
                 agent.update_target_model()
