@@ -85,7 +85,7 @@ class DQNAgent:
                 continue
 
             target = self.model.predict(state, steps=1, verbose=0)
-            if done and reward > 0:
+            if done and reward > 20:
                 target[0][action] = reward
             else:
                 # a = self.model.predict(next_state)[0]
@@ -155,10 +155,10 @@ if __name__ == "__main__":
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
                   f'\t pip_counter = {env.closed_counter}')
 
-            if closed and reward > 0:
+            if closed and reward > 20:
                 agent.update_target_model()
-                print("episode: {}/{}, score: {}, e: {:.2}"
-                      .format(e, cfg.EPISODES, time, agent.epsilon))
+                print("episode: {}/{}, score: {}, e: {}"
+                      .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
 
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
