@@ -12,12 +12,16 @@ class Trevor:
         self.enter_price = 0
         self.last_action = 0
 
+        self.closed_counter = 0
         self.total_reward = 0
+        self.trade_counter = 0
 
     def reset(self):
         self.cursor = 0
         self.enter_price = 0
         self.last_action = 0
+        self.closed_counter = 0
+        self.trade_counter = 0
 
     def step(self, action):
         sample, last_open, last_close = self.df.get(self.cursor)
@@ -27,6 +31,9 @@ class Trevor:
         self.__increment_cursor()
 
         return sample, reward, closing_trade, ''
+
+    def get_total_reward(self):
+        return self.total_reward
 
     def __process_action(self, action, last_open, last_close):
         if action < 0 or action > 2:
@@ -86,6 +93,9 @@ class Trevor:
 
         else:
             reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
+
+        self.closed_counter += reward / cfg.TIMES_FACTOR
+        self.trade_counter += 1
         return reward
 
     def __append_last_action(self, sample: np.ndarray, action: int):

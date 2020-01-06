@@ -21,9 +21,9 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95  # discount rate
-        self.epsilon = 1.0  # exploration rate
+        self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.9999
+        self.epsilon_decay = 0.9993
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -66,9 +66,16 @@ class DQNAgent:
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        if not isinstance(state, np.ndarray):
+            return 0
+
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
-        act_values = self.model.predict(state)
+        act_values = self.model.predict(state, steps=1)
+        return np.argmax(act_values[0])  # returns action
+
+    def predict(self, state):
+        act_values = self.model.predict(state, steps=1)
         return np.argmax(act_values[0])  # returns action
 
     def replay(self, batch_size):
@@ -78,7 +85,7 @@ class DQNAgent:
                 continue
 
             target = self.model.predict(state, steps=1, verbose=0)
-            if done:
+            if done and reward > 0:
                 target[0][action] = reward
             else:
                 # a = self.model.predict(next_state)[0]
@@ -97,13 +104,29 @@ class DQNAgent:
         self.model.save_weights(name)
 
 
+def eval_test(state_size, action_size):
+    envv = trevor_env.Trevor(dataframe.Dataframe())
+
+    agentt = DQNAgent(state_size, action_size)
+    agentt.load("./save/cartpole-ddqn.h5")
+
+    sample = envv.reset()
+
+    for i in range(envv.df.lenght):
+        acc = agentt.predict(sample)
+        sample, rewardd, closedd, _ = envv.step(acc)
+        print('Actual reward = {},\t total reward = {},\t action = {}'.format(round(rewardd, 3),
+                                                                              round(envv.get_total_reward(), 3),
+                                                                              acc))
+
+
 if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
     state_size = (cfg.NUMBER_OF_SAMPLES, 6)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
 
-    # agent.load("./save/cartpole-ddqn.h5")
+    agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
     batch_size = 32
@@ -128,7 +151,9 @@ if __name__ == "__main__":
             agent.memorize(state=state, action=action, reward=reward, next_state=next_state, done=closed)
             state = next_state
 
-            print('Actual reward = {},\t total reward = {},\t action = {}'.format(round(reward, 3), round(env.total_reward, 3), action))
+            print(f'Actual reward = {round(reward, 2)},\t total reward = {round(env.total_reward, 2)},'
+                  f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
+                  f'\t pip_counter = {env.closed_counter}')
 
             if closed and reward > 0:
                 agent.update_target_model()
