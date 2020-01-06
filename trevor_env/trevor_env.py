@@ -2,6 +2,7 @@ from dataframe import dataframe
 import cfg
 import numpy as np
 import time
+from math import pow
 
 
 class Trevor:
@@ -90,9 +91,11 @@ class Trevor:
     def __close_trade(self, last_close):
         if self.last_action == 2:
             reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
+            reward += 0.00001 * pow(reward, 3)
 
         else:
             reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
+            reward += 0.00001 * pow(reward, 3)
 
         self.closed_counter += reward / cfg.TIMES_FACTOR
         self.trade_counter += 1
