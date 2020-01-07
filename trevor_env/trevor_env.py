@@ -7,6 +7,9 @@ from numba import jit
 
 
 class Trevor:
+    POSITIVE_TIMES_REWARD = 0.00001
+    NEGATIVE_TIMES_REWARD = 0.00002
+
     def __init__(self, df: dataframe.Dataframe):
         self.df = df
 
@@ -94,12 +97,14 @@ class Trevor:
         if self.last_action == 2:
             reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
             self.closed_counter += reward / cfg.TIMES_FACTOR
-            reward += 0.00001 * pow(reward, 3)
+            reward += self.POSITIVE_TIMES_REWARD * pow(reward, 3) if reward > 0 \
+                else self.NEGATIVE_TIMES_REWARD * pow(reward, 3)
 
         else:
             reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
             self.closed_counter += reward / cfg.TIMES_FACTOR
-            reward += 0.00001 * pow(reward, 3)
+            reward += self.POSITIVE_TIMES_REWARD * pow(reward, 3) if reward > 0 \
+                else self.NEGATIVE_TIMES_REWARD * pow(reward, 3)
 
         self.trade_counter += 1
         return reward
