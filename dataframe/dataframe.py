@@ -4,7 +4,6 @@ import os
 import time
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import datetime
 
 
 class Dataframe:
@@ -19,7 +18,7 @@ class Dataframe:
 
     def get(self, sample_number):
         if sample_number > self.lenght or sample_number < 0:
-            raise ValueError(f"Sample number out of range (0 - {self.lenght})")
+            raise ValueError("Sample number out of range (0 - {self.lenght})")
 
         start_index = sample_number
         end_index = start_index + cfg.NUMBER_OF_SAMPLES

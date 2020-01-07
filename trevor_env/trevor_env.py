@@ -3,6 +3,7 @@ import cfg
 import numpy as np
 import time
 from math import pow
+from numba import jit
 
 
 class Trevor:

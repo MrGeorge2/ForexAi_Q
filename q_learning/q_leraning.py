@@ -13,6 +13,7 @@ import os
 from dataframe import dataframe
 from trevor_env import trevor_env
 import cfg
+from numba import jit
 
 
 class DQNAgent:
@@ -118,6 +119,55 @@ def eval_test(state_size, action_size):
         print('Actual reward = {},\t total reward = {},\t action = {}'.format(round(rewardd, 3),
                                                                               round(envv.get_total_reward(), 3),
                                                                               acc))
+
+
+def teach():
+    global agent
+    if len(agent.memory) > batch_size:
+        agent.replay(batch_size)
+
+
+def do_the_rest():
+    env = trevor_env.Trevor(dataframe.Dataframe())
+    state_size = (cfg.NUMBER_OF_SAMPLES, 6)
+    action_size = 3
+    agent = DQNAgent(state_size, action_size)
+
+    agent.load("./save/cartpole-ddqn.h5")
+
+    closed = False
+    batch_size = 32
+
+    for e in range(cfg.EPISODES):
+        state = env.reset()
+
+        for time in range(env.df.lenght):
+            action = agent.act(state)
+
+            if action > 3 or action < 0:
+                print('Got action ' + action)
+                continue
+
+            next_state, reward, closed, _ = env.step(action)
+
+            if not isinstance(next_state, np.ndarray) or not (state, np.ndarray):
+                print(next_state)
+                print('NOT NUMPY!!')
+                continue
+
+            agent.memorize(state=state, action=action, reward=reward, next_state=next_state, done=closed)
+            state = next_state
+
+            print(f'Actual reward = {round(reward, 2)},\t total reward = {round(env.total_reward, 2)},'
+                  f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
+                  f'\t pip_counter = {env.closed_counter}')
+
+            if closed and reward > 20:
+                agent.update_target_model()
+                print("episode: {}/{}, score: {}, e: {}"
+                      .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
+
+        agent.save("./save/cartpole-ddqn.h5")
 
 
 if __name__ == "__main__":
