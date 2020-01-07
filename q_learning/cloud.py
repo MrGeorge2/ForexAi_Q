@@ -170,11 +170,14 @@ class Trevor:
     def __close_trade(self, last_close):
         if self.last_action == 2:
             reward = (last_close - self.enter_price) * REWARD_FOR_PIPS * TIMES_FACTOR
+            self.closed_counter += reward / TIMES_FACTOR
+            reward += 0.00001 * pow(reward, 3)
 
         else:
             reward = (self.enter_price - last_close) * REWARD_FOR_PIPS * TIMES_FACTOR
+            self.closed_counter += reward / TIMES_FACTOR
+            reward += 0.00001 * pow(reward, 3)
 
-        self.closed_counter += reward / TIMES_FACTOR
         self.trade_counter += 1
         return reward
 
@@ -187,7 +190,6 @@ class Trevor:
         return np.expand_dims(np.append(sample[0], action_arr, axis=1), axis=0)
 
 
-
 class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
@@ -196,7 +198,7 @@ class DQNAgent:
         self.gamma = 0.95  # discount rate
         self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.9993
+        self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -258,7 +260,7 @@ class DQNAgent:
                 continue
 
             target = self.model.predict(state, steps=1, verbose=0)
-            if done and reward > 0:
+            if done and reward > 20:
                 target[0][action] = reward
             else:
                 # a = self.model.predict(next_state)[0]
@@ -330,7 +332,7 @@ if __name__ == "__main__":
 
             if closed and reward > 0:
                 agent.update_target_model()
-                print("episode: {}/{}, score: {}, e: {:.2}"
+                print("episode: {}/{}, score: {}, e: {}"
                       .format(e, EPISODES, time, agent.epsilon))
 
             if len(agent.memory) > batch_size:
