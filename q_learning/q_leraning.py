@@ -22,9 +22,9 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95  # discount rate
-        self.epsilon = 0.01  # exploration rate
+        self.epsilon = 1  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.9999
+        self.epsilon_decay = 0.99999
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -100,6 +100,14 @@ class DQNAgent:
 
     def load(self, name):
         self.model.load_weights(name)
+        self.model._make_predict_function()
+        self.model._make_test_function()
+        self.model._make_train_function()
+
+        self.target_model.load_weights(name)
+        self.target_model._make_predict_function()
+        self.target_model._make_test_function()
+        self.target_model._make_train_function()
 
     def save(self, name):
         self.model.save_weights(name)

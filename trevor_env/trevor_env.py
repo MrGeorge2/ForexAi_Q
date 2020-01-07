@@ -24,6 +24,7 @@ class Trevor:
         self.last_action = 0
         self.closed_counter = 0
         self.trade_counter = 0
+        return self.step(0)[0]
 
     def step(self, action):
         sample, last_open, last_close = self.df.get(self.cursor)
