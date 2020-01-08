@@ -21,10 +21,10 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
-        self.gamma = 0.20  # discount rate
-        self.epsilon = 0.1  # exploration rate
+        self.gamma = 0.5  # discount rate
+        self.epsilon = 1  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.9999
+        self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -86,7 +86,7 @@ class DQNAgent:
                 continue
 
             target = self.model.predict(state, steps=1, verbose=0)
-            if done and reward > 20:
+            if done and reward > 100:
                 target[0][action] = reward
             else:
                 # a = self.model.predict(next_state)[0]
@@ -170,7 +170,7 @@ def do_the_rest():
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
                   f'\t pip_counter = {env.closed_counter}')
 
-            if closed and reward > 20:
+            if closed and reward > 100:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {}"
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
@@ -213,7 +213,7 @@ if __name__ == "__main__":
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
                   f'\t pip_counter = {env.closed_counter}')
 
-            if closed and reward > 20:
+            if closed and reward > 100:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {}"
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
