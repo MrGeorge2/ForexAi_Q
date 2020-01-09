@@ -3,7 +3,7 @@ import cfg
 import numpy as np
 import time
 from math import pow
-from numba import jit
+from matplotlib import pyplot
 
 
 class Trevor:
@@ -21,12 +21,17 @@ class Trevor:
         self.total_reward = 0
         self.trade_counter = 0
 
+        self.closed_counter_list = []
+
     def reset(self):
         self.cursor = 0
         self.enter_price = 0
         self.last_action = 0
         self.closed_counter = 0
         self.trade_counter = 0
+        self.total_reward = 0
+        # self.reset_closed_list()
+
         return self.step(0)[0]
 
     def step(self, action):
@@ -40,6 +45,14 @@ class Trevor:
 
     def get_total_reward(self):
         return self.total_reward
+
+    def reset_closed_list(self):
+        self.closed_counter_list = []
+
+    def plot(self):
+        x = list(range(1, len(self.closed_counter_list) + 1))
+        pyplot.plot(x, self.closed_counter_list)
+        pyplot.show()
 
     def __process_action(self, action, last_open, last_close):
         if action < 0 or action > 2:
@@ -96,16 +109,16 @@ class Trevor:
     def __close_trade(self, last_close):
         if self.last_action == 2:
             reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
-            self.closed_counter += reward / cfg.TIMES_FACTOR
             reward += self.POSITIVE_TIMES_REWARD * pow(reward, 3) if reward > 0 \
                 else self.NEGATIVE_TIMES_REWARD * pow(reward, 3)
 
         else:
             reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS * cfg.TIMES_FACTOR
-            self.closed_counter += reward / cfg.TIMES_FACTOR
             reward += self.POSITIVE_TIMES_REWARD * pow(reward, 3) if reward > 0 \
                 else self.NEGATIVE_TIMES_REWARD * pow(reward, 3)
 
+        self.closed_counter += reward / cfg.TIMES_FACTOR
+        self.closed_counter_list.append(self.closed_counter)
         self.trade_counter += 1
         return reward
 

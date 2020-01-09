@@ -13,19 +13,20 @@ import os
 from dataframe import dataframe
 from trevor_env import trevor_env
 import cfg
-from numba import jit
+from threading import Thread
 
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = deque(maxlen=2000)
+        self.memory = deque(maxlen=5000)
         self.gamma = 0.7  # discount rate
-        self.epsilon = 1  # exploration rate
+        self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
+        self.batch_size = 32
         self.model = self._build_model()
         self.target_model = self._build_model()
         self.update_target_model()
@@ -79,24 +80,26 @@ class DQNAgent:
         act_values = self.model.predict(state, steps=1)
         return np.argmax(act_values[0])  # returns action
 
-    def replay(self, batch_size):
-        minibatch = random.sample(self.memory, batch_size)
-        for state, action, reward, next_state, done in minibatch:
-            if not isinstance(state, np.ndarray):
-                continue
+    def replay(self):
+        while True:
+            minibatch = random.sample(self.memory, self.batch_size)
+            for state, action, reward, next_state, done in minibatch:
+                if not isinstance(state, np.ndarray):
+                    continue
 
-            target = self.model.predict(state, steps=1, verbose=0)
-            if done and reward > 100:
-                target[0][action] = reward
-            else:
-                # a = self.model.predict(next_state)[0]
-                t = self.target_model.predict(next_state)[0]
-                target[0][action] = reward + self.gamma * np.amax(t)
-                # target[0][action] = reward + self.gamma * t[np.argmax(a)]
-            self.model.fit(state, target, epochs=1, verbose=0)
+                target = self.model.predict(state, steps=1, verbose=0)
+                if done and reward > 100:
+                    target[0][action] = reward
+                else:
+                    # a = self.model.predict(next_state)[0]
+                    t = self.target_model.predict(next_state)[0]
+                    target[0][action] = reward + self.gamma * np.amax(t)
+                    # target[0][action] = reward + self.gamma * t[np.argmax(a)]
+                self.model.fit(state, target, epochs=1, verbose=0)
 
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_decay
+            # print('done')
 
     def load(self, name):
         self.model.load_weights(name)
@@ -188,6 +191,7 @@ if __name__ == "__main__":
 
     closed = False
     batch_size = 32
+    run = False
 
     for e in range(cfg.EPISODES):
         state = env.reset()
@@ -219,6 +223,12 @@ if __name__ == "__main__":
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
 
             if len(agent.memory) > batch_size:
-                agent.replay(batch_size)
-
+                # agent.replay(batch_size)
+                if not run:
+                    thr_list = [Thread(target=agent.replay) for _ in range(15)]
+                    for thr in thr_list:
+                        thr.start()
+                    run = True
+        env.plot()
+        env.reset_closed_list()
         agent.save("./save/cartpole-ddqn.h5")
