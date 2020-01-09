@@ -7,8 +7,8 @@ from numba import jit
 
 
 class Trevor:
-    POSITIVE_TIMES_REWARD = 0.000015
-    NEGATIVE_TIMES_REWARD = 0.000015
+    POSITIVE_TIMES_REWARD = 0.000002
+    NEGATIVE_TIMES_REWARD = 0.000002
 
     def __init__(self, df: dataframe.Dataframe):
         self.df = df
