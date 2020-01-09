@@ -28,7 +28,7 @@ class Dataframe:
         last_open = df_sample.at[df_sample.index[-1], 'open']
         last_close = df_sample.at[df_sample.index[-1], 'close']
 
-        df_sample = df_sample[['open', 'close', 'high', 'low', 'tickqty']].values
+        df_sample = df_sample[['open', 'close', 'high', 'low', 'tickqty', 'hours', 'minutes']].values
         df_sample = self._scale(df_sample, start=0, end=4)
         return np.expand_dims(df_sample, axis=0), last_open, last_close
 
@@ -49,6 +49,9 @@ class Dataframe:
             }
         )
 
+        # df['hours']= pd.to_datetime(df['datetime'], format='%Y%m%d %H:%M:%S.%f').dt.hour / 24
+        df['hours'] = pd.to_datetime(df['date'], format='%m-%d-%Y %H:%M:%S').dt.hour / 24
+        df['minutes'] = pd.to_datetime(df['date'], format='%m-%d-%Y %H:%M:%S').dt.minute / 64
         df['tickqty'] = df['tickqty'] / cfg.TICQTY_MAX
         return df
 
