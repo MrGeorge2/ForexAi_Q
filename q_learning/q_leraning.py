@@ -24,7 +24,7 @@ class DQNAgent:
         self.gamma = 0.7  # discount rate
         self.epsilon = 0.95  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
         self.batch_size = 32
         self.model = self._build_model()
