@@ -22,7 +22,7 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
         self.gamma = 0.7  # discount rate
-        self.epsilon = 0.95  # exploration rate
+        self.epsilon = 0.4  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
@@ -173,7 +173,7 @@ def do_the_rest():
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
                   f'\t pip_counter = {env.closed_counter}')
 
-            if closed and reward > 400:
+            if closed and reward > 1500:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {}"
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
@@ -217,7 +217,7 @@ if __name__ == "__main__":
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
                   f'\t pip_counter = {env.closed_counter}')
 
-            if closed and reward > 400:
+            if closed and reward > 1500:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {}"
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
