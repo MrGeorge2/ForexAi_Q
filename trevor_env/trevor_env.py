@@ -15,6 +15,8 @@ class Trevor:
 
         self.cursor = 0
         self.enter_price = 0
+        self.local_max_price = 0
+
         self.last_action = 0
 
         self.closed_counter = 0
@@ -49,9 +51,10 @@ class Trevor:
     def reset_closed_list(self):
         self.closed_counter_list = []
 
-    def plot(self):
+    def plot(self, title):
         x = list(range(1, len(self.closed_counter_list) + 1))
         pyplot.plot(x, self.closed_counter_list)
+        pyplot.title(str(title))
         pyplot.show()
 
     def __process_action(self, action, last_open, last_close):
@@ -69,15 +72,26 @@ class Trevor:
         elif (self.last_action == 2 and action == 1) or (self.last_action == 1 and action == 2):
             reward = self.__close_trade(last_close=last_close)
             self.enter_price = last_open
+            self.local_max_price = last_open
             closing_trade = True
 
         # """ HOLDING OPENED POSITION  """
         elif (self.last_action == 2 and action == 2) or (self.last_action == 1 and action == 1):
             if self.last_action == 2:
-                reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS
+                if self.local_max_price < last_close:
+                    reward = (last_close - self.enter_price) * cfg.REWARD_FOR_PIPS
+                    self.local_max_price = last_close
+
+                else:
+                    reward = (last_close - self.local_max_price) * cfg.REWARD_FOR_PIPS
 
             else:
-                reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS
+                if self.local_max_price > last_close:
+                    reward = (self.enter_price - last_close) * cfg.REWARD_FOR_PIPS
+                    self.local_max_price = last_close
+
+                else:
+                    reward = (self.local_max_price - last_close) * cfg.REWARD_FOR_PIPS
 
         # """ OPENING POSITION  """
         elif (self.last_action == 0 and action == 1) or (self.last_action == 0 and action == 2):
