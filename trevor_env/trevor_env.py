@@ -38,7 +38,7 @@ class Trevor:
 
     def step(self, action):
         sample, last_open, last_close = self.df.get(self.cursor)
-        sample = self.__append_last_action(sample=sample, action=action)
+        sample = self.__append_last_action(sample=sample, action=action, last_close=last_close)
 
         reward, closing_trade = self.__process_action(action=action, last_open=last_open, last_close=last_close)
         self.__increment_cursor()
@@ -141,13 +141,23 @@ class Trevor:
         self.trade_counter += 1
         return reward
 
-    def __append_last_action(self, sample: np.ndarray, action: int):
+    def __append_last_action(self, sample: np.ndarray, action: int, last_close: float):
         how_many = sample.shape[1]
         action = cfg.ACTION_DECODE[action]
 
         action_arr = (np.expand_dims(np.asarray([action for i in range(0, how_many)]), axis=1))
 
-        return np.expand_dims(np.append(sample[0], action_arr, axis=1), axis=0)
+        if action == 2:
+            dif = (last_close - self.enter_price) / 200
+            pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
+        else:
+            dif = self.enter_price - last_close / 200
+            pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
+
+        sample = np.append(sample[0], action_arr, axis=1)
+        sample = np.append(sample, pip_difference, axis=1)
+
+        return np.expand_dims(sample, axis=0)
 
 
 if __name__ == '__main__':

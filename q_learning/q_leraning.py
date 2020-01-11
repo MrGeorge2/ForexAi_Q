@@ -134,9 +134,10 @@ def eval_test(state_size, action_size):
 
 if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
-    state_size = (cfg.NUMBER_OF_SAMPLES, 8)
+    state_size = (cfg.NUMBER_OF_SAMPLES, 9)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
+    # agent.save("./save/cartpole-ddqn.h5")
     agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
