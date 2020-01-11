@@ -21,10 +21,10 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
-        self.gamma = 0.84  # discount rate
-        self.epsilon = 0.55  # exploration rate
+        self.gamma = 0.9  # discount rate
+        self.epsilon = 1  # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.9999
+        self.epsilon_decay = 0.99995
         self.learning_rate = 0.001
         self.batch_size = 32
         self.model = self._build_model()
@@ -72,9 +72,9 @@ class DQNAgent:
             return 0
 
         if np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_size)
+            return random.randrange(self.action_size), True
         act_values = self.model.predict(state, steps=1)
-        return np.argmax(act_values[0])  # returns action
+        return np.argmax(act_values[0]), False  # returns action
 
     def predict(self, state):
         act_values = self.model.predict(state, steps=1)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         state = env.reset()
 
         for time in range(env.df.lenght):
-            action = agent.act(state)
+            action, random_action = agent.act(state)
 
             if action > 3 or action < 0:
                 print('Got action ' + action)
@@ -165,7 +165,8 @@ if __name__ == "__main__":
 
             print(f'Actual reward = {round(reward, 2)},\t total reward = {round(env.total_reward, 2)},'
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
-                  f'\t pip_counter = {env.closed_counter}')
+                  f'\t pip_counter = {env.closed_counter}'
+                  f'\t random_action = {random_action}')
 
             if closed and reward > 30 * cfg.TIMES_FACTOR:
                 agent.update_target_model()
@@ -175,7 +176,7 @@ if __name__ == "__main__":
             if len(agent.memory) > batch_size:
                 # agent.replay(batch_size)
                 if not run:
-                    thr_list = [Thread(target=agent.replay) for _ in range(15)]
+                    thr_list = [Thread(target=agent.replay) for _ in range(10)]
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
