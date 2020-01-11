@@ -21,8 +21,8 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
-        self.gamma = 0.794  # discount rate
-        self.epsilon = 0.9  # exploration rate
+        self.gamma = 0.84  # discount rate
+        self.epsilon = 0.55  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
@@ -88,7 +88,7 @@ class DQNAgent:
                     continue
 
                 target = self.model.predict(state, steps=1, verbose=0)
-                if done and reward > 60 * cfg.TIMES_FACTOR:
+                if done and reward > 30 * cfg.TIMES_FACTOR:
                     target[0][action] = reward
                 else:
                     # a = self.model.predict(next_state)[0]
@@ -137,7 +137,6 @@ if __name__ == "__main__":
     state_size = (cfg.NUMBER_OF_SAMPLES, 8)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
-
     agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
@@ -168,7 +167,7 @@ if __name__ == "__main__":
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
                   f'\t pip_counter = {env.closed_counter}')
 
-            if closed and reward > 60 * cfg.TIMES_FACTOR:
+            if closed and reward > 30 * cfg.TIMES_FACTOR:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {}"
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))

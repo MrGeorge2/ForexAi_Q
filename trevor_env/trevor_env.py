@@ -7,8 +7,8 @@ from matplotlib import pyplot
 
 
 class Trevor:
-    POSITIVE_TIMES_REWARD = 0.000002
-    NEGATIVE_TIMES_REWARD = 0.000002
+    POSITIVE_TIMES_REWARD = 0
+    NEGATIVE_TIMES_REWARD = 0
 
     def __init__(self, df: dataframe.Dataframe):
         self.df = df
