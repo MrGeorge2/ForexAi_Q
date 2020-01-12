@@ -150,8 +150,12 @@ class Trevor:
         if action == 2:
             dif = (last_close - self.enter_price) / 200
             pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
-        else:
+        elif action == 1:
             dif = self.enter_price - last_close / 200
+            pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
+
+        else:
+            dif = 0
             pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
 
         sample = np.append(sample[0], action_arr, axis=1)
