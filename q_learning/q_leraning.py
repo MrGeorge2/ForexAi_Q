@@ -178,7 +178,7 @@ if __name__ == "__main__":
             if len(agent.memory) > batch_size:
                 # agent.replay(batch_size)
                 if not run:
-                    thr_list = [Thread(target=agent.replay) for _ in range(17)]
+                    thr_list = [Thread(target=agent.replay) for _ in range(15)]
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
