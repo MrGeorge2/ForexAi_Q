@@ -21,7 +21,7 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
-        self.gamma = 0.9  # discount rate
+        self.gamma = 0.97  # discount rate
         self.epsilon = 1  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
@@ -137,6 +137,7 @@ if __name__ == "__main__":
     state_size = (cfg.NUMBER_OF_SAMPLES, 9)
     action_size = 3
     agent = DQNAgent(state_size, action_size)
+
     # agent.save("./save/cartpole-ddqn.h5")
     agent.load("./save/cartpole-ddqn.h5")
 
