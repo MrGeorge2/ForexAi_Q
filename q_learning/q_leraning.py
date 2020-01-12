@@ -9,6 +9,10 @@ from keras.optimizers import Adam
 from keras import backend as K
 import time as t_lib
 import tensorflow as tf
+
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.65)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+
 import os
 from dataframe import dataframe
 from trevor_env import trevor_env
@@ -22,7 +26,7 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
         self.gamma = 0.9  # discount rate
-        self.epsilon = 0.8  # exploration rate
+        self.epsilon = 0.68  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
@@ -177,7 +181,7 @@ if __name__ == "__main__":
             if len(agent.memory) > batch_size:
                 # agent.replay(batch_size)
                 if not run:
-                    thr_list = [Thread(target=agent.replay) for _ in range(10)]
+                    thr_list = [Thread(target=agent.replay) for _ in range(1)]
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
