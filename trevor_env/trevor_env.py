@@ -84,7 +84,7 @@ class Trevor:
 
                 else:
                     reward = (last_close - self.local_max_price) * cfg.REWARD_FOR_PIPS
-                    reward = reward / cfg.DIVIDE_PRICE_UNDER_LOCAL_MINIMA if self.local_max_price > self.enter_price \
+                    reward = reward / cfg.DIVIDE_PRICE_UNDER_LOCAL_MINIMA if last_close > self.enter_price \
                         else reward
 
             else:
@@ -94,7 +94,7 @@ class Trevor:
 
                 else:
                     reward = (self.local_max_price - last_close) * cfg.REWARD_FOR_PIPS
-                    reward = reward / cfg.DIVIDE_PRICE_UNDER_LOCAL_MINIMA if self.local_max_price < self.enter_price \
+                    reward = reward / cfg.DIVIDE_PRICE_UNDER_LOCAL_MINIMA if last_close < self.enter_price \
                         else reward
 
         # """ OPENING POSITION  """
