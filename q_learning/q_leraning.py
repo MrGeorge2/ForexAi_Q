@@ -22,7 +22,7 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
         self.gamma = 0.9  # discount rate
-        self.epsilon = 1  # exploration rate
+        self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
@@ -182,6 +182,6 @@ if __name__ == "__main__":
                         thr.start()
                         t_lib.sleep(1)
                     run = True
-        env.plot(title=f'total reward ={env.total_reward};  e = {round(agent.epsilon, 2)}')
+        env.plot(title=f'total reward ={str(env.total_reward)};  e = {round(agent.epsilon, 2)}')
         env.reset_closed_list()
         agent.save("./save/cartpole-ddqn.h5")
