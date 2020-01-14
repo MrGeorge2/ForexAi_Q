@@ -88,7 +88,7 @@ class DQNAgent:
                     continue
 
                 target = self.model.predict(state, steps=1, verbose=0)
-                if done and reward > 30 * cfg.TIMES_FACTOR:
+                if done and reward > 80 * cfg.TIMES_FACTOR:
                     target[0][action] = reward
                 else:
                     # a = self.model.predict(next_state)[0]
@@ -165,12 +165,12 @@ if __name__ == "__main__":
             agent.memorize(state=state, action=action, reward=reward, next_state=next_state, done=closed)
             state = next_state
 
-            print(f'Actual reward = {round(reward, 2)},\t total reward = {round(env.total_reward, 2)},'
-                  f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 2)}, '
-                  f'\t pip_counter = {env.closed_counter}'
+            print(f'Actual reward = {round(reward, 1)},\t total reward = {round(env.total_reward, 1)},'
+                  f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 1)}, '
+                  f'\t pip_counter = {round(env.closed_counter, 1)}'
                   f'\t random_action = {random_action}')
 
-            if closed and reward > 30 * cfg.TIMES_FACTOR:
+            if closed and reward > 80 * cfg.TIMES_FACTOR:
                 agent.update_target_model()
                 print("episode: {}/{}, score: {}, e: {}"
                       .format(e, cfg.EPISODES, time, round(agent.epsilon, 2)))
