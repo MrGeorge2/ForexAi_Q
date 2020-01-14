@@ -17,16 +17,16 @@ from threading import Thread
 
 
 class DQNAgent:
-    def __init__(self, state_size, action_size):
+    def __init__(self, state_size, action_size, batch_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = deque(maxlen=7000)
+        self.memory = deque(maxlen=4000)
         self.gamma = 0.97  # discount rate
         self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
-        self.batch_size = 32
+        self.batch_size = batch_size
         self.model = self._build_model()
         self.target_model = self._build_model()
         self.update_target_model()
@@ -68,6 +68,7 @@ class DQNAgent:
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        # return 0, True
         if not isinstance(state, np.ndarray):
             return 0
 
@@ -136,13 +137,13 @@ if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
     state_size = (cfg.NUMBER_OF_SAMPLES, 9)
     action_size = 3
-    agent = DQNAgent(state_size, action_size)
+    batch_size = 32 * 15
+    agent = DQNAgent(state_size, action_size, batch_size)
 
     # agent.save("./save/cartpole-ddqn.h5")
     agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
-    batch_size = 32 * 15
     run = False
 
     for e in range(cfg.EPISODES):
@@ -168,7 +169,8 @@ if __name__ == "__main__":
             print(f'Actual reward = {round(reward, 1)},\t total reward = {round(env.total_reward, 1)},'
                   f'\t action = {action}, \t trade_counter = {round(env.trade_counter, 1)}, '
                   f'\t pip_counter = {round(env.closed_counter, 1)}'
-                  f'\t random_action = {random_action}')
+                  f'\t random_action = {random_action}'
+                  f'\t candle_number = {time}')
 
             if closed and reward > 80 * cfg.TIMES_FACTOR:
                 agent.update_target_model()
