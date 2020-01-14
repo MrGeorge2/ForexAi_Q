@@ -53,9 +53,9 @@ class Trevor:
 
     def plot(self, title):
         x = list(range(1, len(self.closed_counter_list) + 1))
-        #pyplot.plot(x, self.closed_counter_list)
-        #pyplot.title(str(title))
-        #pyplot.show()
+        pyplot.plot(x, self.closed_counter_list)
+        pyplot.title(str(title))
+        pyplot.show()
 
     def __process_action(self, action, last_open, last_close):
         if action < 0 or action > 2:

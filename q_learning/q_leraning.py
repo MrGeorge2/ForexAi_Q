@@ -20,9 +20,9 @@ class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = deque(maxlen=5000)
+        self.memory = deque(maxlen=7000)
         self.gamma = 0.97  # discount rate
-        self.epsilon = 1  # exploration rate
+        self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     agent.load("./save/cartpole-ddqn.h5")
 
     closed = False
-    batch_size = 32
+    batch_size = 32 * 15
     run = False
 
     for e in range(cfg.EPISODES):
@@ -178,7 +178,7 @@ if __name__ == "__main__":
             if len(agent.memory) > batch_size:
                 # agent.replay(batch_size)
                 if not run:
-                    thr_list = [Thread(target=agent.replay) for _ in range(15)]
+                    thr_list = [Thread(target=agent.replay) for _ in range(1)]
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
