@@ -70,7 +70,7 @@ class Trevor:
 
         # """ CLOSING POSITION AND GOING TO DIFFERENT POSITION """
         elif (self.last_action == 2 and action == 1) or (self.last_action == 1 and action == 2):
-            reward = self.__close_trade(last_close=last_close)
+            reward = self.__close_trade(last_close=last_close) - cfg.CLOSING_TRADE_WITH_OPENING
             self.enter_price = last_open
             self.local_max_price = last_open
             closing_trade = True

@@ -22,7 +22,7 @@ class DQNAgent:
         self.action_size = action_size
         self.memory = deque(maxlen=4000)
         self.gamma = 0.97  # discount rate
-        self.epsilon = 0.01  # exploration rate
+        self.epsilon = 1  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
@@ -49,11 +49,14 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(CuDNNLSTM(units=32, return_sequences=True, input_shape=self.state_size))
+        model.add(CuDNNLSTM(units=48, return_sequences=True, input_shape=self.state_size))
         model.add(Dropout(0.2))
 
-        model.add(CuDNNLSTM(units=16, return_sequences=False))
+        model.add(CuDNNLSTM(units=32, return_sequences=False))
         model.add(Dropout(0.2))
+
+        model.add(Dense(units=12, init='uniform', action='relu'))
+        model.add(Dropout(0.1))
 
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss=self._huber_loss,
