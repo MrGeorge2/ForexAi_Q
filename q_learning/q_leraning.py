@@ -70,7 +70,6 @@ class DQNAgent:
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
-        # return 0, True
         if not isinstance(state, np.ndarray):
             return 0
 
@@ -102,7 +101,7 @@ class DQNAgent:
 
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
-            # print('done')
+            print('done')
 
     def load(self, name):
         self.model.load_weights(name)

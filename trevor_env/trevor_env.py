@@ -38,9 +38,10 @@ class Trevor:
 
     def step(self, action):
         sample, last_open, last_close = self.df.get(self.cursor)
+
+        reward, closing_trade = self.__process_action(action=action, last_close=last_close)
         sample = self.__append_last_action(sample=sample, action=action, last_close=last_close)
 
-        reward, closing_trade = self.__process_action(action=action, last_open=last_open, last_close=last_close)
         self.__increment_cursor()
 
         return sample, reward, closing_trade, ''
@@ -57,7 +58,7 @@ class Trevor:
         pyplot.title(str(title))
         pyplot.show()
 
-    def __process_action(self, action, last_open, last_close):
+    def __process_action(self, action, last_close):
         if action < 0 or action > 2:
             raise ValueError('Action have to be inrage (0 - 2) got {action}')
 
@@ -71,8 +72,8 @@ class Trevor:
         # """ CLOSING POSITION AND GOING TO DIFFERENT POSITION """
         elif (self.last_action == 2 and action == 1) or (self.last_action == 1 and action == 2):
             reward = self.__close_trade(last_close=last_close) - cfg.CLOSING_TRADE_WITH_OPENING
-            self.enter_price = last_open
-            self.local_max_price = last_open
+            self.enter_price = last_close
+            self.local_max_price = last_close
             closing_trade = True
 
         # """ HOLDING OPENED POSITION  """
@@ -99,11 +100,8 @@ class Trevor:
 
         # """ OPENING POSITION  """
         elif (self.last_action == 0 and action == 1) or (self.last_action == 0 and action == 2):
-            if action == 1:
-                self.enter_price = last_open
-
-            else:
-                self.enter_price = last_open
+            self.enter_price = last_close
+            self.local_max_price = last_close
             reward = cfg.HOLD_REWARD
 
         # """ HOLD """
@@ -143,15 +141,12 @@ class Trevor:
 
     def __append_last_action(self, sample: np.ndarray, action: int, last_close: float):
         how_many = sample.shape[1]
-        action = cfg.ACTION_DECODE[action]
+        decoded_action = cfg.ACTION_DECODE[action]
 
-        action_arr = (np.expand_dims(np.asarray([action for i in range(0, how_many)]), axis=1))
+        action_arr = (np.expand_dims(np.asarray([decoded_action for i in range(0, how_many)]), axis=1))
 
-        if action == 2:
-            dif = (last_close - self.enter_price) / 200
-            pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
-        elif action == 1:
-            dif = self.enter_price - last_close / 200
+        if action == 2 or action == 1:
+            dif = (last_close - self.enter_price)
             pip_difference = (np.expand_dims(np.asarray([dif for i in range(0, how_many)]), axis=1))
 
         else:
