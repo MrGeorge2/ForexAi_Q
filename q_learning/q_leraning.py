@@ -55,8 +55,7 @@ class DQNAgent:
         model.add(CuDNNLSTM(units=32, return_sequences=False))
         model.add(Dropout(0.2))
 
-        model.add(Dense(units=12, init='uniform', action='relu'))
-        model.add(Dropout(0.1))
+        model.add(Dense(units=12, activation='relu'))
 
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss=self._huber_loss,
@@ -140,7 +139,7 @@ if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
     state_size = (cfg.NUMBER_OF_SAMPLES, 9)
     action_size = 3
-    batch_size = 32 * 15
+    batch_size = 32
     agent = DQNAgent(state_size, action_size, batch_size)
 
     # agent.save("./save/cartpole-ddqn.h5")
@@ -183,7 +182,7 @@ if __name__ == "__main__":
             if len(agent.memory) > batch_size:
                 # agent.replay(batch_size)
                 if not run:
-                    thr_list = [Thread(target=agent.replay) for _ in range(1)]
+                    thr_list = [Thread(target=agent.replay) for _ in range(15)]
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
