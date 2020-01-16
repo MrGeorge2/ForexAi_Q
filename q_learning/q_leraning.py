@@ -101,7 +101,7 @@ class DQNAgent:
 
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
-            print('done')
+            # print('done')
 
     def load(self, name):
         self.model.load_weights(name)
