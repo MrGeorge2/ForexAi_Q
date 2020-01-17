@@ -120,7 +120,7 @@ class Trevor:
 
         self.cursor += 1
         if self.cursor > self.df.lenght:
-            self.reset()
+            self.cursor = 0
 
     def __close_trade(self, last_close):
         if self.last_action == 2:

@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 class Dataframe:
 
     def __init__(self):
-        self._dataframe = self._load()
+        self._dataframe = self._load()[:2000]
         self.__scaler = MinMaxScaler()
 
     @property

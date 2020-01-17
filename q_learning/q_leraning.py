@@ -69,6 +69,17 @@ class DQNAgent:
     def memorize(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
+    def train(self, state, action, reward, next_state, done):
+        target = self.model.predict(state, steps=1, verbose=0)
+        if done and reward > 80 * cfg.TIMES_FACTOR:
+            target[0][action] = reward
+        else:
+            # a = self.model.predict(next_state)[0]
+            t = self.target_model.predict(next_state)[0]
+            target[0][action] = reward + self.gamma * np.amax(t)
+            # target[0][action] = reward + self.gamma * t[np.argmax(a)]
+        self.model.fit(state, target, epochs=1, verbose=0)
+
     def act(self, state):
         if not isinstance(state, np.ndarray):
             return 0
@@ -164,6 +175,7 @@ if __name__ == "__main__":
                 print('NOT NUMPY!!')
                 continue
 
+            agent.train(state=state, action=action, reward=reward, next_state=next_state, done=closed)
             agent.memorize(state=state, action=action, reward=reward, next_state=next_state, done=closed)
             state = next_state
 
@@ -181,11 +193,12 @@ if __name__ == "__main__":
             if len(agent.memory) > batch_size:
                 # agent.replay(batch_size)
                 if not run:
-                    thr_list = [Thread(target=agent.replay) for _ in range(15)]
+                    thr_list = [Thread(target=agent.replay) for _ in range(2)]
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
                     run = True
-        env.plot(title=f'total reward ={env.total_reward};  e = {round(agent.epsilon, 2)}')
+
+        env.plot(title=f'total reward ={round(env.total_reward, 2)};  e = {round(agent.epsilon, 2)}')
         env.reset_closed_list()
         agent.save("./save/cartpole-ddqn.h5")
