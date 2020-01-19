@@ -9,11 +9,12 @@ from keras.optimizers import Adam
 from keras import backend as K
 import time as t_lib
 import tensorflow as tf
-import os
+from numba import jit
 from dataframe import dataframe
 from trevor_env import trevor_env
 import cfg
 from threading import Thread
+from multiprocessing import  Process
 
 
 class DQNAgent:
@@ -21,12 +22,16 @@ class DQNAgent:
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=4000)
+        self.sample_memory = deque()
+
         self.gamma = 0.97  # discount rate
-        self.epsilon = 1  # exploration rate
+        self.epsilon = 0.01  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9999
         self.learning_rate = 0.001
+
         self.batch_size = batch_size
+        self.batch_size_samples = 500
         self.model = self._build_model()
         self.target_model = self._build_model()
         self.update_target_model()
@@ -80,6 +85,18 @@ class DQNAgent:
             # target[0][action] = reward + self.gamma * t[np.argmax(a)]
         self.model.fit(state, target, epochs=1, verbose=0)
 
+    def train_from_iterations(self):
+        while True:
+            samples = []
+            for _ in range(self.batch_size_samples):
+                if len(self.sample_memory) != 0:
+                    samples.append(self.sample_memory.popleft())
+                else:
+                    break
+            if len(samples) != 0:
+                for state, action, reward, next_state, done in samples:
+                    self.train(state, action, reward, next_state, done)
+
     def act(self, state):
         if not isinstance(state, np.ndarray):
             return 0
@@ -129,22 +146,6 @@ class DQNAgent:
         self.model.save_weights(name)
 
 
-def eval_test(state_size, action_size):
-    envv = trevor_env.Trevor(dataframe.Dataframe())
-
-    agentt = DQNAgent(state_size, action_size)
-    agentt.load("./save/cartpole-ddqn.h5")
-
-    sample = envv.reset()
-
-    for i in range(envv.df.lenght):
-        acc = agentt.predict(sample)
-        sample, rewardd, closedd, _ = envv.step(acc)
-        print('Actual reward = {},\t total reward = {},\t action = {}'.format(round(rewardd, 3),
-                                                                              round(envv.get_total_reward(), 3),
-                                                                              acc))
-
-
 if __name__ == "__main__":
     env = trevor_env.Trevor(dataframe.Dataframe())
     state_size = (cfg.NUMBER_OF_SAMPLES, 9)
@@ -160,7 +161,7 @@ if __name__ == "__main__":
 
     for e in range(cfg.EPISODES):
         state = env.reset()
-
+        strt = t_lib.time()
         for time in range(env.df.lenght):
             action, random_action = agent.act(state)
 
@@ -197,8 +198,20 @@ if __name__ == "__main__":
                     for thr in thr_list:
                         thr.start()
                         t_lib.sleep(1)
+
+                    thr_list = [Thread(target=agent.train_from_iterations) for _ in range(1)]
+                    for thr in thr_list:
+                        thr.start()
+                        t_lib.sleep(1)
+
                     run = True
 
-        env.plot(title=f'total reward ={round(env.total_reward, 2)};  e = {round(agent.epsilon, 2)}')
+        # clear_output()
+        env.plot(title='total reward ={};  e = {}'.format(round(env.total_reward, 2), round(agent.epsilon, 2)))
         env.reset_closed_list()
+        print('Waiting to train the whole dataset')
+        while not len(agent.sample_memory) == 0:
+            pass
+        print('DONE, lets roll!!')
         agent.save("./save/cartpole-ddqn.h5")
+        print(t_lib.time() - strt)
